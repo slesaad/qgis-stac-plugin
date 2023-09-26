@@ -384,7 +384,7 @@ def _get_metadata() -> typing.Dict:
             "description": poetry_conf["description"],
             "version": poetry_conf["version"],
             "tags": ", ".join(metadata.get("tags", [])),
-            "changelog": _changelog(),
+            # "changelog": _changelog(),
         }
     )
     return metadata
