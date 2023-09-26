@@ -22,8 +22,8 @@ import toml
 import typer
 
 LOCAL_ROOT_DIR = Path(__file__).parent.resolve()
-SRC_NAME = "qgis_stac_x"
-PACKAGE_NAME = SRC_NAME.replace("_", "")
+SRC_NAME = "qgis_stac"
+PACKAGE_NAME = f'{SRC_NAME.replace("_", "")}x'
 TEST_FILES = ["test", "test_suite.py", "docker-compose.yml", "scripts"]
 app = typer.Typer()
 
