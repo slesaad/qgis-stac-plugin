@@ -22,14 +22,9 @@ import toml
 import typer
 
 LOCAL_ROOT_DIR = Path(__file__).parent.resolve()
-SRC_NAME = "qgis_stac"
+SRC_NAME = "qgis_stac_x"
 PACKAGE_NAME = SRC_NAME.replace("_", "")
-TEST_FILES = [
-    "test",
-    "test_suite.py",
-    "docker-compose.yml",
-    "scripts"
-]
+TEST_FILES = ["test", "test_suite.py", "docker-compose.yml", "scripts"]
 app = typer.Typer()
 
 
@@ -38,6 +33,7 @@ class GithubRelease:
     """
     Class for defining plugin releases details.
     """
+
     pre_release: bool
     tag_name: str
     url: str
@@ -45,10 +41,7 @@ class GithubRelease:
 
 
 @app.callback()
-def main(
-        context: typer.Context,
-        verbose: bool = False,
-        qgis_profile: str = "default"):
+def main(context: typer.Context, verbose: bool = False, qgis_profile: str = "default"):
     """Performs various development-oriented tasks for this plugin
 
     :param context: Application context
@@ -69,10 +62,7 @@ def main(
 
 
 @app.command()
-def install(
-        context: typer.Context,
-        build_src: bool = True
-):
+def install(context: typer.Context, build_src: bool = True):
     """Deploys plugin to QGIS plugins directory
 
     :param context: Application context
@@ -85,26 +75,26 @@ def install(
     uninstall(context)
     _log("Building...", context=context)
 
-    built_directory = build(context, clean=True) \
-        if build_src else LOCAL_ROOT_DIR / "build" / SRC_NAME
+    built_directory = (
+        build(context, clean=True) if build_src else LOCAL_ROOT_DIR / "build" / SRC_NAME
+    )
 
-    root_directory = Path.home() / \
-                     f".local/share/QGIS/QGIS3/profiles/" \
-                     f"{context.obj['qgis_profile']}"
+    root_directory = (
+        Path.home() / f".local/share/QGIS/QGIS3/profiles/"
+        f"{context.obj['qgis_profile']}"
+    )
 
     base_target_directory = root_directory / "python/plugins" / SRC_NAME
     _log(f"Copying built plugin to {base_target_directory}...", context=context)
     shutil.copytree(built_directory, base_target_directory)
     _log(
-        f"Installed {str(built_directory)!r}"
-        f" into {str(base_target_directory)!r}",
-        context=context)
+        f"Installed {str(built_directory)!r}" f" into {str(base_target_directory)!r}",
+        context=context,
+    )
 
 
 @app.command()
-def symlink(
-        context: typer.Context
-):
+def symlink(context: typer.Context):
     """Create a plugin symlink to QGIS plugins directory
 
     :param context: Application context
@@ -113,9 +103,10 @@ def symlink(
 
     build_path = LOCAL_ROOT_DIR / "build" / SRC_NAME
 
-    root_directory = Path.home() / \
-                     f".local/share/QGIS/QGIS3/profiles/" \
-                     f"{context.obj['qgis_profile']}"
+    root_directory = (
+        Path.home() / f".local/share/QGIS/QGIS3/profiles/"
+        f"{context.obj['qgis_profile']}"
+    )
 
     destination_path = root_directory / "python/plugins" / SRC_NAME
 
@@ -132,9 +123,10 @@ def uninstall(context: typer.Context):
     :param context: Application context
     :type context: typer.Context
     """
-    root_directory = Path.home() / \
-                     f".local/share/QGIS/QGIS3/profiles/" \
-                     f"{context.obj['qgis_profile']}"
+    root_directory = (
+        Path.home() / f".local/share/QGIS/QGIS3/profiles/"
+        f"{context.obj['qgis_profile']}"
+    )
     base_target_directory = root_directory / "python/plugins" / SRC_NAME
     shutil.rmtree(str(base_target_directory), ignore_errors=True)
     _log(f"Removed {str(base_target_directory)!r}", context=context)
@@ -142,9 +134,10 @@ def uninstall(context: typer.Context):
 
 @app.command()
 def generate_zip(
-        context: typer.Context,
-        output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "dist"):
-    """ Generates plugin zip folder, that can be used to installed the
+    context: typer.Context,
+    output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "dist",
+):
+    """Generates plugin zip folder, that can be used to installed the
         plugin in QGIS
 
     :param context: Application context
@@ -165,12 +158,12 @@ def generate_zip(
 
 @app.command()
 def build(
-        context: typer.Context,
-        output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build" / SRC_NAME,
-        clean: bool = True,
-        tests: bool = False
+    context: typer.Context,
+    output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build" / SRC_NAME,
+    clean: bool = True,
+    tests: bool = False,
 ) -> Path:
-    """ Builds plugin directory for use in QGIS application.
+    """Builds plugin directory for use in QGIS application.
 
     :param context: Application context
     :type context: typer.Context
@@ -203,9 +196,9 @@ def build(
 
 @app.command()
 def copy_icon(
-        output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
+    output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
 ) -> Path:
-    """ Copies the plugin intended icon to the specified output
+    """Copies the plugin intended icon to the specified output
         directory.
 
     :param output_directory: Output directory where the icon will be saved.
@@ -229,10 +222,10 @@ def copy_icon(
 
 @app.command()
 def copy_source_files(
-        output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
-        tests: bool = False
+    output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
+    tests: bool = False,
 ):
-    """ Copies the plugin source files to the specified output
+    """Copies the plugin source files to the specified output
             directory.
 
     :param output_directory: Output directory where the icon will be saved.
@@ -258,10 +251,10 @@ def copy_source_files(
 
 @app.command()
 def compile_resources(
-        context: typer.Context,
-        output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
+    context: typer.Context,
+    output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
 ):
-    """ Compiles plugin resources using the pyrcc package
+    """Compiles plugin resources using the pyrcc package
 
     :param context: Application context
     :type context: typer.Context
@@ -278,10 +271,10 @@ def compile_resources(
 
 @app.command()
 def generate_metadata(
-        context: typer.Context,
-        output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
+    context: typer.Context,
+    output_directory: typing.Optional[Path] = LOCAL_ROOT_DIR / "build/temp",
 ):
-    """ Generates plugin metadata file using settings defined in the
+    """Generates plugin metadata file using settings defined in the
         project configuration file 'pyproject.toml'
 
     :param context: Application context
@@ -305,14 +298,14 @@ def generate_metadata(
 
 @app.command()
 def generate_plugin_repo_xml(
-        context: typer.Context,
+    context: typer.Context,
 ):
-    """ Generates the plugin repository xml file, from which users
+    """Generates the plugin repository xml file, from which users
         can use to install the plugin in QGIS.
 
     :param context: Application context
     :type context: typer.Context
-   """
+    """
     repo_base_dir = LOCAL_ROOT_DIR / "docs" / "repository"
     repo_base_dir.mkdir(parents=True, exist_ok=True)
     metadata = _get_metadata()
@@ -369,7 +362,7 @@ def generate_plugin_repo_xml(
 
 @lru_cache()
 def _get_metadata() -> typing.Dict:
-    """ Reads the metadata properties from the
+    """Reads the metadata properties from the
         project configuration file 'pyproject.toml'
 
     :return: plugin metadata
@@ -398,7 +391,7 @@ def _get_metadata() -> typing.Dict:
 
 
 def _changelog() -> str:
-    """ Reads the changelog content from a config file.
+    """Reads the changelog content from a config file.
 
     :returns: Plugin changelog
     :type: str
@@ -411,11 +404,8 @@ def _changelog() -> str:
     return changelog_file
 
 
-def _add_to_zip(
-        directory: Path,
-        zip_handler: zipfile.ZipFile,
-        arc_path_base: Path):
-    """ Adds to files inside the passed directory to the zip file.
+def _add_to_zip(directory: Path, zip_handler: zipfile.ZipFile, arc_path_base: Path):
+    """Adds to files inside the passed directory to the zip file.
 
     :param directory: Directory with files that are to be zipped.
     :type directory: Path
@@ -428,18 +418,13 @@ def _add_to_zip(
     """
     for item in directory.iterdir():
         if item.is_file():
-            zip_handler.write(item, arcname=str(
-                item.relative_to(arc_path_base)))
+            zip_handler.write(item, arcname=str(item.relative_to(arc_path_base)))
         else:
             _add_to_zip(item, zip_handler, arc_path_base)
 
 
-def _log(
-        msg,
-        *args,
-        context: typing.Optional[typer.Context] = None,
-        **kwargs):
-    """ Logs the message into the terminal.
+def _log(msg, *args, context: typing.Optional[typer.Context] = None, **kwargs):
+    """Logs the message into the terminal.
     :param msg: Directory with files that are to be zipped.
     :type msg: str
 
@@ -456,9 +441,9 @@ def _log(
 
 
 def _get_existing_releases(
-        context: typing.Optional = None,
+    context: typing.Optional = None,
 ) -> typing.List[GithubRelease]:
-    """ Gets the existing plugin releases in  available in the Github repository.
+    """Gets the existing plugin releases in  available in the Github repository.
 
     :param context: Application context
     :type context: typer.Context
@@ -466,8 +451,7 @@ def _get_existing_releases(
     :returns: List of github releases
     :rtype: List[GithubRelease]
     """
-    base_url = "https://api.github.com/repos/" \
-               "stac-utils/qgis-stac-plugin/releases"
+    base_url = "https://api.github.com/repos/" "slesaad/qgis-stac-plugin/releases"
     response = httpx.get(base_url)
     result = []
     if response.status_code == 200:
@@ -495,11 +479,9 @@ def _get_existing_releases(
 
 
 def _get_latest_releases(
-        current_releases: typing.List[GithubRelease],
-) -> typing.Tuple[
-    typing.Optional[GithubRelease],
-    typing.Optional[GithubRelease]]:
-    """ Searches for the latest plugin releases from the Github plugin releases.
+    current_releases: typing.List[GithubRelease],
+) -> typing.Tuple[typing.Optional[GithubRelease], typing.Optional[GithubRelease]]:
+    """Searches for the latest plugin releases from the Github plugin releases.
 
     :param current_releases: Existing plugin releases
      available in the Github repository.
