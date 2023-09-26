@@ -7,20 +7,6 @@ from ..api.models import ApiCapability
 
 CATALOGS = [
     {
-        "id": "b3f888b7-f353-4a89-abfb-f5d753681427",
-        "name": "US GHG Center STAC",
-        "url": "https://ghg.center/api/stac/",
-        "selected": False,
-        "capability": None,
-    },
-    {
-        "id": "74c1ee19-b2d7-4872-818b-ccabde3b8e14",
-        "name": "VEDA STAC",
-        "url": "https://staging-stac.delta-backend.com/",
-        "selected": False,
-        "capability": None,
-    },
-    {
         "id": "07e3e9dd-cbad-4cf6-8336-424b88abf8f3",
         "name": "Microsoft Planetary Computer STAC API",
         "url": "https://planetarycomputer.microsoft.com/api/stac/v1",
@@ -52,6 +38,13 @@ CATALOGS = [
         "id": "17a79ce2-9a61-457d-926f-03d37c0606b6",
         "name": "NASA CMR STAC",
         "url": "https://cmr.earthdata.nasa.gov/stac",
+        "selected": False,
+        "capability": None,
+    },
+    {
+        "id": "74c1ee19-b2d7-4872-818b-ccabde3b8e14",
+        "name": "VEDA STAC",
+        "url": "https://staging-stac.delta-backend.com/",
         "selected": False,
         "capability": None,
     },
