@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>STAC API Browser</string>
+   <string>STAC API Browser X</string>
   </property>
   <widget class="QWidget" name="central_widget">
    <property name="sizePolicy">

@@ -17,12 +17,7 @@ from qgis.PyQt import (
 )
 from qgis.PyQt.uic import loadUiType
 
-from qgis.core import (
-    Qgis,
-    QgsApplication,
-    QgsCoordinateReferenceSystem,
-    QgsTask
-)
+from qgis.core import Qgis, QgsApplication, QgsCoordinateReferenceSystem, QgsTask
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -41,7 +36,7 @@ from ..api.models import (
     SearchFilters,
     SortField,
     SortOrder,
-    QueryableFetchType
+    QueryableFetchType,
 )
 from ..api.client import Client
 
@@ -62,7 +57,7 @@ WidgetUi, _ = loadUiType(
 
 
 class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
-    """ Main plugin UI that contains tabs for search, results and settings
+    """Main plugin UI that contains tabs for search, results and settings
     functionalities"""
 
     search_started = QtCore.pyqtSignal()
@@ -73,8 +68,8 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
     result_items = []
 
     def __init__(
-            self,
-            parent=None,
+        self,
+        parent=None,
     ):
         super().__init__(parent)
         self.setupUi(self)
@@ -85,44 +80,24 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
 
         self.updated_result_items.connect(self.update_refreshed_items)
 
-        self.connections_box.currentIndexChanged.connect(
-            self.update_connection_buttons
-        )
+        self.connections_box.currentIndexChanged.connect(self.update_connection_buttons)
 
         self.footprint_items = {}
-        self.footprint_btn.clicked.connect(
-            self.footprint_btn_clicked
-        )
-        self.all_footprints_btn.clicked.connect(
-            self.all_footprints_btn_clicked
-        )
-        self.all_footprints_btn.setEnabled(
-            len(self.result_items) > 0
-        )
+        self.footprint_btn.clicked.connect(self.footprint_btn_clicked)
+        self.all_footprints_btn.clicked.connect(self.all_footprints_btn_clicked)
+        self.all_footprints_btn.setEnabled(len(self.result_items) > 0)
 
-        self.search_btn.clicked.connect(
-            self.search_items_api
-        )
-        self.next_btn.clicked.connect(
-            self.next_items
-        )
-        self.prev_btn.clicked.connect(
-            self.previous_items
-        )
-        self.clear_results_btn.clicked.connect(
-            self.clear_search_results
-        )
+        self.search_btn.clicked.connect(self.search_items_api)
+        self.next_btn.clicked.connect(self.next_items)
+        self.prev_btn.clicked.connect(self.previous_items)
+        self.clear_results_btn.clicked.connect(self.clear_search_results)
 
-        self.fetch_collections_btn.clicked.connect(
-            self.fetch_collections
-        )
+        self.fetch_collections_btn.clicked.connect(self.fetch_collections)
         self.update_current_connection(self.connections_box.currentIndex())
         settings_manager.connections_settings_updated.connect(
             self.update_connections_box
         )
-        settings_manager.connections_settings_updated.connect(
-            self.update_api_client
-        )
+        settings_manager.connections_settings_updated.connect(self.update_api_client)
 
         self.update_api_client()
 
@@ -141,7 +116,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
 
         # prepare sort and filter model for the collections
         self.model = QtGui.QStandardItemModel()
-        self.model.setHorizontalHeaderLabels(['Title'])
+        self.model.setHorizontalHeaderLabels(["Title"])
         self.proxy_model = QtCore.QSortFilterProxyModel()
         self.proxy_model.setSourceModel(self.model)
         self.proxy_model.setDynamicSortFilter(True)
@@ -152,7 +127,9 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.collections_tree.selectionModel().selectionChanged.connect(
             self.display_selected_collection
         )
-        self.collections_tree.doubleClicked.connect(self.collections_tree_double_clicked)
+        self.collections_tree.doubleClicked.connect(
+            self.collections_tree_double_clicked
+        )
 
         self.filter_text.textChanged.connect(self.filter_changed)
 
@@ -186,15 +163,12 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
 
         self.populate_sorting_field()
 
-        download_folder = settings_manager.get_value(
-            Settings.DOWNLOAD_FOLDER
-        )
+        download_folder = settings_manager.get_value(Settings.DOWNLOAD_FOLDER)
         self.download_folder_btn.setFilePath(
             download_folder
         ) if download_folder else None
 
-        self.download_folder_btn.fileChanged.connect(
-            self.save_download_folder)
+        self.download_folder_btn.fileChanged.connect(self.save_download_folder)
         self.open_folder_btn.clicked.connect(self.open_download_folder)
 
         # setup model for filtering and sorting item results
@@ -219,12 +193,10 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.queryable_properties = []
 
     def prepare_plugin_settings(self):
-        """ Initializes all the plugin related settings"""
+        """Initializes all the plugin related settings"""
 
         auto_asset_loading = settings_manager.get_value(
-            Settings.AUTO_ASSET_LOADING,
-            False,
-            setting_type=bool
+            Settings.AUTO_ASSET_LOADING, False, setting_type=bool
         )
         self.asset_loading.setChecked(auto_asset_loading)
 
@@ -232,17 +204,16 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.asset_loading.stateChanged.connect(self.update_plugin_settings)
 
     def update_plugin_settings(self):
-        """ Makes updates to all the plugin settings
-         defined in the settings tab.
-         """
+        """Makes updates to all the plugin settings
+        defined in the settings tab.
+        """
         settings_manager.set_value(
             Settings.AUTO_ASSET_LOADING,
             self.asset_loading.isChecked(),
         )
 
     def prepare_filter_box(self):
-        """ Prepares the advanced filter group box inputs
-        """
+        """Prepares the advanced filter group box inputs"""
 
         labels = {
             FilterLang.CQL_JSON: tr("CQL_JSON"),
@@ -253,17 +224,14 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
             self.filter_lang_cmb.addItem(item_text, lang_type)
 
         self.filter_lang_cmb.setCurrentIndex(
-            self.filter_lang_cmb.findData(
-                FilterLang.CQL_JSON,
-                role=QtCore.Qt.UserRole)
+            self.filter_lang_cmb.findData(FilterLang.CQL_JSON, role=QtCore.Qt.UserRole)
         )
 
         self.highlighter = JsonHighlighter(self.filter_edit.document())
-        self.filter_edit.cursorPositionChanged.connect(
-            self.highlighter.rehighlight)
+        self.filter_edit.cursorPositionChanged.connect(self.highlighter.rehighlight)
 
     def add_connection(self):
-        """ Adds a new connection into the plugin, then updates
+        """Adds a new connection into the plugin, then updates
         the connections combo box list to show the added connection.
         """
         connection_dialog = ConnectionDialog()
@@ -271,8 +239,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.update_connections_box()
 
     def edit_connection(self):
-        """ Edits the passed connection and updates the connection box list.
-        """
+        """Edits the passed connection and updates the connection box list."""
         current_text = self.connections_box.currentText()
         if current_text == "":
             return
@@ -282,18 +249,17 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.update_connections_box()
 
     def remove_connection(self):
-        """ Removes the current active connection.
-        """
+        """Removes the current active connection."""
         current_text = self.connections_box.currentText()
         if current_text == "":
             return
         connection = settings_manager.find_connection_by_name(current_text)
         reply = QtWidgets.QMessageBox.warning(
             self,
-            tr('STAC API Browser'),
+            tr("STAC API Browser X"),
             tr('Remove the connection "{}"?').format(current_text),
             QtWidgets.QMessageBox.Yes,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
         if reply == QtWidgets.QMessageBox.Yes:
             settings_manager.delete_connection(connection.id)
@@ -304,15 +270,14 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
             self.update_connections_box()
 
     def update_connection_buttons(self):
-        """ Updates the edit and remove connection buttons state
-        """
+        """Updates the edit and remove connection buttons state"""
         current_name = self.connections_box.currentText()
         enabled = current_name != ""
         self.edit_connection_btn.setEnabled(enabled)
         self.remove_connection_btn.setEnabled(enabled)
 
     def update_current_connection(self, index: int):
-        """ Sets the connection with the passed index to be the
+        """Sets the connection with the passed index to be the
         current selected connection.
 
         :param index: Index from the connection box item
@@ -321,16 +286,13 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         current_text = self.connections_box.itemText(index)
         if current_text == "":
             return
-        current_connection = settings_manager. \
-            find_connection_by_name(current_text)
+        current_connection = settings_manager.find_connection_by_name(current_text)
         settings_manager.set_current_connection(current_connection.id)
         if current_connection:
             self.update_api_client()
             # Update the collections view to show the current connection
             # collections
-            collections = settings_manager.get_collections(
-                current_connection.id
-            )
+            collections = settings_manager.get_collections(current_connection.id)
             self.model.removeRows(0, self.model.rowCount())
             self.load_collections(collections)
             # self.handle_queryable(Queryable())
@@ -338,7 +300,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.search_btn.setEnabled(current_connection is not None)
 
     def clear_properties(self):
-        """ Removes all the current queryable properties from the
+        """Removes all the current queryable properties from the
         queryable group box
         """
 
@@ -347,10 +309,8 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.queryable_area.setWidget(QtWidgets.QWidget())
 
     def fetch_queryable(self):
-        """ Gets the queryable property using the plugin API."""
-        self.current_progress_message = tr(
-            "Fetching queryable properties..."
-        )
+        """Gets the queryable property using the plugin API."""
+        self.current_progress_message = tr("Fetching queryable properties...")
         self.clear_properties()
         self.search_started.emit()
 
@@ -362,31 +322,29 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
             for collection in self.get_selected_collections():
                 try:
                     QgsTask.fromFunction(
-                        'Queryable plugin API function',
+                        "Queryable plugin API function",
                         self.api_client.get_queryable(
-                            fetch_type=queryable_fetch_type,
-                            resource=collection
-                        )
+                            fetch_type=queryable_fetch_type, resource=collection
+                        ),
                     )
                 except Exception as err:
-                    log(tr("Error in getting queryables properties for"
-                           " {}, {}".
-                           format(collection, err))
+                    log(
+                        tr(
+                            "Error in getting queryables properties for"
+                            " {}, {}".format(collection, err)
                         )
+                    )
             if not self.get_selected_collections():
                 self.show_message(
-                    tr("No collection has been selected"),
-                    level=Qgis.Info
+                    tr("No collection has been selected"), level=Qgis.Info
                 )
                 self.update_search_inputs(True)
 
         else:
-            self.api_client.get_queryable(
-                fetch_type=queryable_fetch_type
-            )
+            self.api_client.get_queryable(fetch_type=queryable_fetch_type)
 
     def handle_queryable(self, queryable):
-        """ Adds response queryable properties from the plugin API to the
+        """Adds response queryable properties from the plugin API to the
         plugin UI.
 
         :param queryable: Queryable properties
@@ -404,14 +362,13 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         # while removing duplicates
 
         self.queryable_properties.extend(
-            queryable for queryable in queryable.properties
+            queryable
+            for queryable in queryable.properties
             if queryable not in self.queryable_properties
         )
 
         for property in self.queryable_properties:
-            property_widget = QueryablePropertyWidget(
-                property
-            )
+            property_widget = QueryablePropertyWidget(property)
             layout.addWidget(property_widget)
             layout.setAlignment(property_widget, QtCore.Qt.AlignTop)
             self.queryable_property_widgets.append(property_widget)
@@ -433,9 +390,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         """
         current_connection = settings_manager.get_current_connection()
         if current_connection:
-            self.api_client = Client.from_connection_settings(
-                current_connection
-            )
+            self.api_client = Client.from_connection_settings(current_connection)
             if self.api_client:
                 self.api_client.items_received.connect(self.display_results)
                 self.api_client.collections_received.connect(self.display_results)
@@ -443,99 +398,93 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
                 self.api_client.error_received.connect(self.display_search_error)
 
     def update_connections_box(self):
-        """ Updates connections list displayed on the connection
+        """Updates connections list displayed on the connection
         combox box to contain the latest list of the connections.
         """
         existing_connections = settings_manager.list_connections()
         self.connections_box.clear()
         if len(existing_connections) > 0:
-            self.connections_box.addItems(
-                conn.name for conn in existing_connections
-            )
+            self.connections_box.addItems(conn.name for conn in existing_connections)
             current_connection = settings_manager.get_current_connection()
             if current_connection is not None:
-                current_index = self.connections_box. \
-                    findText(current_connection.name)
+                current_index = self.connections_box.findText(current_connection.name)
                 self.connections_box.setCurrentIndex(current_index)
                 # Update the collections view to show the current connection
                 # collections
-                collections = settings_manager.get_collections(
-                    current_connection.id
-                )
+                collections = settings_manager.get_collections(current_connection.id)
                 self.model.removeRows(0, self.model.rowCount())
                 self.load_collections(collections)
             else:
                 self.connections_box.setCurrentIndex(0)
 
     def search_items_api(self):
-        """ Sets the current progress message, initiliaze search page
+        """Sets the current progress message, initiliaze search page
         and calls the plugin function for searching current catalog items.
         """
-        self.current_progress_message = tr(
-            "Searching items..."
-        )
+        self.current_progress_message = tr("Searching items...")
         self.page = 1
         self.search_items()
 
     def previous_items(self):
-        """ Sets the items search to go on the previous page.
-        """
+        """Sets the items search to go on the previous page."""
         self.page -= 1
-        self.current_progress_message = tr(
-            "Retrieving previous page..."
-        )
+        self.current_progress_message = tr("Retrieving previous page...")
         self.search_items()
 
     def next_items(self):
-        """ Sets the items search to go on the next page.
-       """
+        """Sets the items search to go on the next page."""
         self.page += 1
-        self.current_progress_message = tr(
-            "Retrieving next page..."
-        )
+        self.current_progress_message = tr("Retrieving next page...")
         self.search_items()
 
     def search_items(self):
-        """ Uses the filters available on the search tab to
+        """Uses the filters available on the search tab to
         search the STAC Catalog defined by the current connection details.
         Emits the search started signal to alert UI about the
         search operation.
         """
         self.search_type = ResourceType.FEATURE
-        use_start_date = self.date_filter_group.isChecked() and \
-                         not self.start_dte.dateTime().isNull()
-        use_end_date = self.date_filter_group.isChecked() and \
-                       not self.end_dte.dateTime().isNull()
-        start_dte = self.start_dte.dateTime() \
-            if use_start_date else None
-        end_dte = self.end_dte.dateTime() \
-            if use_end_date else None
+        use_start_date = (
+            self.date_filter_group.isChecked()
+            and not self.start_dte.dateTime().isNull()
+        )
+        use_end_date = (
+            self.date_filter_group.isChecked() and not self.end_dte.dateTime().isNull()
+        )
+        start_dte = self.start_dte.dateTime() if use_start_date else None
+        end_dte = self.end_dte.dateTime() if use_end_date else None
 
         collections = self.get_selected_collections()
         page_size = settings_manager.get_current_connection().page_size
-        spatial_extent = self.extent_box.outputExtent() \
-            if self.extent_box.isChecked() else None
+        spatial_extent = (
+            self.extent_box.outputExtent() if self.extent_box.isChecked() else None
+        )
 
-        filter_text = self.filter_edit.toPlainText() \
-            if self.advanced_box.isChecked() else None
-        filter_lang = self.filter_lang_cmb.itemData(
-            self.filter_lang_cmb.currentIndex()
-        ) if self.advanced_box.isChecked() else None
+        filter_text = (
+            self.filter_edit.toPlainText() if self.advanced_box.isChecked() else None
+        )
+        filter_lang = (
+            self.filter_lang_cmb.itemData(self.filter_lang_cmb.currentIndex())
+            if self.advanced_box.isChecked()
+            else None
+        )
 
         if self.queryable_box.isChecked():
             filter_texts = []
             for property_widget in self.queryable_property_widgets:
-                filter_texts.append(property_widget.filter_text()) \
-                if property_widget.filter_text() else None
-            filter_text = ' and '.join(filter_texts)
+                filter_texts.append(
+                    property_widget.filter_text()
+                ) if property_widget.filter_text() else None
+            filter_text = " and ".join(filter_texts)
             filter_lang = FilterLang.CQL2_TEXT
 
-        sort_field = self.sort_cmb.itemData(
-            self.sort_cmb.currentIndex()
-        )
+        sort_field = self.sort_cmb.itemData(self.sort_cmb.currentIndex())
 
-        sort_order = SortOrder.DESCENDING \
-            if self.reverse_order_box.isChecked() else SortOrder.ASCENDING
+        sort_order = (
+            SortOrder.DESCENDING
+            if self.reverse_order_box.isChecked()
+            else SortOrder.ASCENDING
+        )
 
         self.api_client.get_items(
             ItemSearch(
@@ -554,8 +503,8 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.search_started.emit()
 
     def fetch_collections(self):
-        """ Fetches the collections available on the current
-            STAC API connection.
+        """Fetches the collections available on the current
+        STAC API connection.
         """
         self.search_type = ResourceType.COLLECTION
         self.current_progress_message = tr("Fetching collections...")
@@ -563,12 +512,8 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.api_client.get_collections()
         self.search_started.emit()
 
-    def show_message(
-            self,
-            message,
-            level=Qgis.Warning
-    ):
-        """ Shows message on the main widget message bar
+    def show_message(self, message, level=Qgis.Warning):
+        """Shows message on the main widget message bar
 
         :param message: Message text
         :type message: str
@@ -580,7 +525,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.message_bar.pushMessage(message, level=level)
 
     def show_progress(self, message, minimum=0, maximum=0):
-        """ Shows the progress message on the main widget message bar
+        """Shows the progress message on the main widget message bar
 
         :param message: Progress message
         :type message: str
@@ -610,19 +555,16 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
             try:
                 self.progress_bar.setValue(int(value))
             except RuntimeError:
-                log(
-                    tr("Error setting value to a progress bar"),
-                    notify=False
-                )
+                log(tr("Error setting value to a progress bar"), notify=False)
 
     def handle_search_start(self):
-        """ Handles the logic to be executed when searching has started"""
+        """Handles the logic to be executed when searching has started"""
         self.message_bar.clearWidgets()
         self.show_progress(self.current_progress_message)
         self.update_search_inputs(enabled=False)
 
     def handle_search_end(self):
-        """ Handles the logic to be executed when searching has ended"""
+        """Handles the logic to be executed when searching has ended"""
         self.message_bar.clearWidgets()
         if self.search_error_message:
             self.show_message(self.search_error_message, Qgis.Critical)
@@ -630,7 +572,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.update_search_inputs(enabled=True)
 
     def update_search_inputs(self, enabled):
-        """ Sets the search inputs state using the provided enabled status
+        """Sets the search inputs state using the provided enabled status
 
         :param enabled: Whether to enable the widgets.
         :type enabled: bool
@@ -647,50 +589,40 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.reverse_order_box.setEnabled(enabled)
 
     def prepare_message_bar(self):
-        """ Initializes the widget message bar settings"""
+        """Initializes the widget message bar settings"""
         self.message_bar.setSizePolicy(
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed
         )
+        self.grid_layout.addWidget(self.container, 0, 0, 1, 1)
         self.grid_layout.addWidget(
-            self.container,
-            0, 0, 1, 1
-        )
-        self.grid_layout.addWidget(
-            self.message_bar,
-            0, 0, 1, 1,
-            alignment=QtCore.Qt.AlignTop
+            self.message_bar, 0, 0, 1, 1, alignment=QtCore.Qt.AlignTop
         )
         self.central_widget.layout().insertLayout(0, self.grid_layout)
 
     def prepare_extent_box(self):
-        """ Configure the spatial extent box with the initial settings. """
-        self.extent_box.setOutputCrs(
-            QgsCoordinateReferenceSystem("EPSG:4326")
-        )
+        """Configure the spatial extent box with the initial settings."""
+        self.extent_box.setOutputCrs(QgsCoordinateReferenceSystem("EPSG:4326"))
         map_canvas = iface.mapCanvas()
         self.extent_box.setCurrentExtent(
             map_canvas.mapSettings().destinationCrs().bounds(),
-            map_canvas.mapSettings().destinationCrs()
+            map_canvas.mapSettings().destinationCrs(),
         )
         self.extent_box.setOutputExtentFromCurrent()
         self.extent_box.setMapCanvas(map_canvas)
         self.extent_box.setChecked(False)
 
     def display_selected_collection(self):
-        """ Shows the current selected collections in the
+        """Shows the current selected collections in the
         targeted label
         """
         collections = self.get_selected_collections(title=True)
 
         self.selected_collections_la.setText(
-            tr("Selected collections: <b>{}</b>").format(
-                ', '.join(collections)
-            )
+            tr("Selected collections: <b>{}</b>").format(", ".join(collections))
         )
 
     def collections_tree_double_clicked(self, index):
-        """ Opens the collection dialog when an entry from the
+        """Opens the collection dialog when an entry from the
         collections view tree has been double clicked.
 
         :param index: Index of the double clicked item.
@@ -702,7 +634,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         collection_dialog.exec_()
 
     def display_results(self, results, pagination=None):
-        """ Shows the found results into their respective view. Emits
+        """Shows the found results into their respective view. Emits
         the search end signal after completing loading up the results
         into the view.
 
@@ -719,7 +651,6 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
             self.save_filters(collections=self.current_collections)
 
         elif self.search_type == ResourceType.FEATURE:
-
             if pagination and pagination.total_pages > 0:
                 if self.page > 1:
                     self.page -= 1
@@ -727,27 +658,24 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
             else:
                 if len(results) > 0:
                     self.result_items_la.setText(
-                        tr(
-                            "Displaying page {} of results, {} item(s)"
-                        ).format(
-                            self.page,
-                            len(results)
+                        tr("Displaying page {} of results, {} item(s)").format(
+                            self.page, len(results)
                         )
                     )
                     self.item_model = ItemsModel(results)
                     self.items_proxy_model.setSourceModel(self.item_model)
                     settings_manager.delete_all_items(
-                        settings_manager.get_current_connection(),
-                        self.page
+                        settings_manager.get_current_connection(), self.page
                     )
                     self.populate_results(results)
                 else:
-
                     self.clear_search_results()
                     if self.page > 1:
                         self.page -= 1
-                    if self.date_filter_group.isChecked() \
-                            or self.extent_box.isChecked():
+                    if (
+                        self.date_filter_group.isChecked()
+                        or self.extent_box.isChecked()
+                    ):
                         self.result_items_la.setText(
                             tr(
                                 "No items were found, "
@@ -756,19 +684,11 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
                             )
                         )
                     else:
-                        self.result_items_la.setText(
-                            tr(
-                                "No items were found"
-                            )
-                        )
+                        self.result_items_la.setText(tr("No items were found"))
                 self.next_btn.setEnabled(len(results) > 0)
                 self.prev_btn.setEnabled(self.page > 1)
-                self.footprint_btn.setEnabled(
-                    False
-                )
-                self.all_footprints_btn.setEnabled(
-                    len(self.result_items) > 0
-                )
+                self.footprint_btn.setEnabled(False)
+                self.all_footprints_btn.setEnabled(len(self.result_items) > 0)
                 self.footprint_items = {}
             self.container.setCurrentIndex(1)
 
@@ -791,13 +711,13 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.search_completed.emit()
 
     def update_refreshed_items(self, connection, items):
-        """ Refreshes the current SAS token connection results items """
+        """Refreshes the current SAS token connection results items"""
 
         if connection == settings_manager.get_current_connection():
             self.display_results(items)
 
     def populate_results(self, results):
-        """ Add the found results into the widget scroll area.
+        """Add the found results into the widget scroll area.
 
         :param results: List of items results
         :type results: list
@@ -810,21 +730,11 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         layout.setSpacing(1)
         for result in results:
             search_result_widget = ResultItemWidget(
-                result,
-                main_widget=self,
-                parent=self
+                result, main_widget=self, parent=self
             )
-            footprint_selected_partial = partial(
-                self.footprint_selected,
-                result
-            )
-            footprint_deselected_partial = partial(
-                self.footprint_deselected,
-                result
-            )
-            search_result_widget.footprint_selected.connect(
-                footprint_selected_partial
-            )
+            footprint_selected_partial = partial(self.footprint_selected, result)
+            footprint_deselected_partial = partial(self.footprint_deselected, result)
+            search_result_widget.footprint_selected.connect(footprint_selected_partial)
             search_result_widget.footprint_deselected.connect(
                 footprint_deselected_partial
             )
@@ -832,10 +742,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
             layout.addWidget(search_result_widget)
             layout.setAlignment(search_result_widget, QtCore.Qt.AlignTop)
         vertical_spacer = QtWidgets.QSpacerItem(
-            20,
-            40,
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Expanding
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
         )
         layout.addItem(vertical_spacer)
         scroll_container.setLayout(layout)
@@ -844,64 +751,51 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.scroll_area.setWidget(scroll_container)
 
     def footprint_selected(self, item):
-        """ Adds the passed item to the list of the
+        """Adds the passed item to the list of the
         footprints to be added.
         """
         self.footprint_items[item.id] = item
         self.footprint_btn.setText(
             f"Add the selected footprint(s) ({len(self.footprint_items.items())})"
         )
-        self.footprint_btn.setEnabled(
-            len(self.footprint_items.items()) > 0
-        )
+        self.footprint_btn.setEnabled(len(self.footprint_items.items()) > 0)
 
     def footprint_deselected(self, item):
-        """ Removes the passed item from the  list of the
+        """Removes the passed item from the  list of the
         footprints to be added.
         """
         self.footprint_items.pop(item.id)
         self.footprint_btn.setText(
             f"Add the selected footprint(s) ({len(self.footprint_items.items())})"
-        ) if self.footprint_items else \
-            self.footprint_btn.setText(
-                "Add the selected footprint(s)"
-            )
-        self.footprint_btn.setEnabled(
-            len(self.footprint_items.items()) > 0
+        ) if self.footprint_items else self.footprint_btn.setText(
+            "Add the selected footprint(s)"
         )
+        self.footprint_btn.setEnabled(len(self.footprint_items.items()) > 0)
 
     def footprint_btn_clicked(self):
-        """ Adds selected footprints as map layers."""
+        """Adds selected footprints as map layers."""
         for key, item in self.footprint_items.items():
             try:
                 footprint_task = QgsTask.fromFunction(
-                    'Add footprints',
-                    add_footprint_helper(item, self)
+                    "Add footprints", add_footprint_helper(item, self)
                 )
                 QgsApplication.taskManager().addTask(footprint_task)
             except Exception as err:
-                log(
-                    tr("Error loading item footprint {}, {}".
-                       format(item.id, err))
-                )
+                log(tr("Error loading item footprint {}, {}".format(item.id, err)))
 
     def all_footprints_btn_clicked(self):
-        """ Adds all footprints for the current page items as map layers."""
+        """Adds all footprints for the current page items as map layers."""
         for item in self.result_items:
             try:
                 footprint_task = QgsTask.fromFunction(
-                    'Add footprint',
-                    add_footprint_helper(item, self)
+                    "Add footprint", add_footprint_helper(item, self)
                 )
                 QgsApplication.taskManager().addTask(footprint_task)
             except Exception as err:
-                log(
-                    tr("Error loading item footprint {}, {}".
-                       format(item.id, err))
-                )
+                log(tr("Error loading item footprint {}, {}".format(item.id, err)))
 
     def clear_search_results(self):
-        """ Clear current search results from the UI"""
+        """Clear current search results from the UI"""
         self.scroll_area.setWidget(QtWidgets.QWidget())
         self.result_items_la.clear()
         self.result_items = []
@@ -915,9 +809,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         :type: str
         """
         exp_reg = QtCore.QRegExp(
-            filter_text,
-            QtCore.Qt.CaseInsensitive,
-            QtCore.QRegExp.FixedString
+            filter_text, QtCore.Qt.CaseInsensitive, QtCore.QRegExp.FixedString
         )
         self.proxy_model.setFilterRegExp(exp_reg)
 
@@ -944,7 +836,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.populate_results(filtered_data)
 
     def populate_sorting_field(self):
-        """" Initializes sorting field combo box list items"""
+        """ " Initializes sorting field combo box list items"""
         labels = {
             SortField.ID: tr("Name"),
             SortField.COLLECTION: tr("Collection"),
@@ -955,18 +847,19 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.sort_cmb.setCurrentIndex(0)
 
     def populate_queryable_field(self):
-        """" Initializes queryable field combo box list items"""
+        """ " Initializes queryable field combo box list items"""
         labels = {
             QueryableFetchType.CATALOG: tr("Fetch from Catalog"),
-            QueryableFetchType.COLLECTION:
-                tr("Fetch from current selected collections"),
+            QueryableFetchType.COLLECTION: tr(
+                "Fetch from current selected collections"
+            ),
         }
         for queryable_type, item_text in labels.items():
             self.queryable_fetch_cmb.addItem(item_text, queryable_type)
         self.queryable_fetch_cmb.setCurrentIndex(0)
 
     def get_selected_collections(self, title=False):
-        """ Gets the currently selected collections from the collection
+        """Gets the currently selected collections from the collection
         view.
 
         :param title: Whether to return collection titles or ids
@@ -987,7 +880,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         return collections_items
 
     def load_collections(self, collections):
-        """ Adds the collections results into collections tree view
+        """Adds the collections results into collections tree view
 
         :param collections: List of collections to be added
         :type collections: []
@@ -995,9 +888,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.model.removeRows(0, self.model.rowCount())
 
         self.result_collections_la.setText(
-            tr("{} STAC collection(s)").format(
-                len(collections)
-            )
+            tr("{} STAC collection(s)").format(len(collections))
         )
 
         for result in collections:
@@ -1010,7 +901,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.proxy_model.sort(QtCore.Qt.DisplayRole)
 
     def save_download_folder(self, folder):
-        """ Saves the passed folder into the plugin settings
+        """Saves the passed folder into the plugin settings
 
         :param folder: Folder intended to be saved
         :type folder: str
@@ -1020,63 +911,55 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
                 if not os.path.exists(folder):
                     os.makedirs(folder)
 
-                settings_manager.set_value(
-                    Settings.DOWNLOAD_FOLDER,
-                    str(folder)
-                )
+                settings_manager.set_value(Settings.DOWNLOAD_FOLDER, str(folder))
             except PermissionError:
                 self.show_message(
-                    tr("Unable to write to {} due to permissions. "
-                       "Choose a different folder".format(
-                        folder)
+                    tr(
+                        "Unable to write to {} due to permissions. "
+                        "Choose a different folder".format(folder)
                     ),
-                    level=Qgis.Critical
+                    level=Qgis.Critical,
                 )
         else:
-            settings_manager.set_value(
-                Settings.DOWNLOAD_FOLDER,
-                folder
-            )
+            settings_manager.set_value(Settings.DOWNLOAD_FOLDER, folder)
             self.show_message(
                 tr(
-                    'Download folder has not been set, '
-                    'a system temporary folder will be used'
+                    "Download folder has not been set, "
+                    "a system temporary folder will be used"
                 ),
-                level=Qgis.Warning
+                level=Qgis.Warning,
             )
 
     def open_download_folder(self):
-        """ Opens the current download folder"""
-        result = open_folder(
-            self.download_folder_btn.filePath()
-        )
+        """Opens the current download folder"""
+        result = open_folder(self.download_folder_btn.filePath())
 
         if not result[0]:
             self.show_message(result[1], level=Qgis.Critical)
 
     def save_filters(self, collections=None):
-        """ Save search filters fetched from the corresponding UI inputs """
-        filter_lang = self.filter_lang_cmb.itemData(
-            self.filter_lang_cmb.currentIndex()
-        )
+        """Save search filters fetched from the corresponding UI inputs"""
+        filter_lang = self.filter_lang_cmb.itemData(self.filter_lang_cmb.currentIndex())
         collections = collections if isinstance(collections, list) else None
 
-        sort_field = self.sort_cmb.itemData(
-            self.sort_cmb.currentIndex()
-        )
-        sort_order = SortOrder.DESCENDING if self.reverse_order_box.isChecked() \
+        sort_field = self.sort_cmb.itemData(self.sort_cmb.currentIndex())
+        sort_order = (
+            SortOrder.DESCENDING
+            if self.reverse_order_box.isChecked()
             else SortOrder.ASCENDING
+        )
 
         filters = SearchFilters(
             collections=collections,
             start_date=(
                 self.start_dte.dateTime()
-                if not self.start_dte.dateTime().isNull() else None
-
+                if not self.start_dte.dateTime().isNull()
+                else None
             ),
             end_date=(
                 self.end_dte.dateTime()
-                if not self.end_dte.dateTime().isNull() else None
+                if not self.end_dte.dateTime().isNull()
+                else None
             ),
             spatial_extent=self.extent_box.outputExtent(),
             date_filter=self.date_filter_group.isChecked(),
@@ -1090,7 +973,7 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         settings_manager.save_search_filters(filters)
 
     def get_filters(self):
-        """ Get the store search filters and load the into their
+        """Get the store search filters and load the into their
         respectively UI components
         """
 
@@ -1098,21 +981,13 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         if filters.collections:
             self.load_collections(filters.collections)
         if filters.start_date is not None:
-            self.start_dte.setDateTime(
-                filters.start_date
-            )
+            self.start_dte.setDateTime(filters.start_date)
         else:
-            self.start_dte.setDateTime(
-                QtCore.QDateTime()
-            )
+            self.start_dte.setDateTime(QtCore.QDateTime())
         if filters.end_date is not None:
-            self.end_dte.setDateTime(
-                filters.end_date
-            )
+            self.end_dte.setDateTime(filters.end_date)
         else:
-            self.end_dte.setDateTime(
-                QtCore.QDateTime()
-            )
+            self.end_dte.setDateTime(QtCore.QDateTime())
         if filters.spatial_extent is not None:
             self.extent_box.setOutputExtentFromUser(
                 filters.spatial_extent,
@@ -1122,19 +997,11 @@ class QgisStacWidget(QtWidgets.QMainWindow, WidgetUi):
         self.extent_box.setChecked(filters.spatial_extent_filter)
         self.advanced_box.setChecked(filters.advanced_filter)
         self.filter_lang_cmb.setCurrentIndex(
-            self.filter_lang_cmb.findData(
-                filters.filter_lang,
-                role=QtCore.Qt.UserRole
-            )
+            self.filter_lang_cmb.findData(filters.filter_lang, role=QtCore.Qt.UserRole)
         ) if filters.filter_lang else None
         self.filter_edit.setPlainText(filters.filter_text)
 
         self.sort_cmb.setCurrentIndex(
-            self.sort_cmb.findData(
-                filters.sort_field,
-                role=QtCore.Qt.UserRole
-            )
+            self.sort_cmb.findData(filters.sort_field, role=QtCore.Qt.UserRole)
         ) if filters.sort_field else None
-        self.reverse_order_box.setChecked(
-            filters.sort_order == SortOrder.DESCENDING
-        )
+        self.reverse_order_box.setChecked(filters.sort_order == SortOrder.DESCENDING)
