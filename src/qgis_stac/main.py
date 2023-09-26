@@ -43,18 +43,16 @@ class QgisStac:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u"&STAC API Browser Plugin")
+        self.menu = self.tr("&STAC API Browser Plugin X")
         self.pluginIsActive = False
         self.main_widget = QgisStacWidget()
-        self.toolbar = self.iface.addToolBar("Open STAC API Browser")
+        self.toolbar = self.iface.addToolBar("Open STAC API Browser X")
         self.toolbar.setObjectName("QGISStac")
 
         # Add default catalogs, first check if they have already
         # been set.
         if not settings_manager.get_value(
-                "default_catalogs_set",
-                default=False,
-                setting_type=bool
+            "default_catalogs_set", default=False, setting_type=bool
         ):
             config_defaults_catalogs()
 
@@ -71,17 +69,17 @@ class QgisStac:
         return QCoreApplication.translate("QgisStac", message)
 
     def add_action(
-            self,
-            icon_path,
-            text,
-            callback,
-            enabled_flag=True,
-            add_to_menu=True,
-            add_to_web_menu=True,
-            add_to_toolbar=True,
-            status_tip=None,
-            whats_this=None,
-            parent=None,
+        self,
+        icon_path,
+        text,
+        callback,
+        enabled_flag=True,
+        add_to_menu=True,
+        add_to_web_menu=True,
+        add_to_toolbar=True,
+        status_tip=None,
+        whats_this=None,
+        parent=None,
     ):
         """Add a toolbar icon to the toolbar.
 
@@ -141,10 +139,7 @@ class QgisStac:
             self.iface.addPluginToMenu(self.menu, action)
 
         if add_to_web_menu:
-            self.iface.addPluginToWebMenu(
-                self.menu,
-                action
-            )
+            self.iface.addPluginToWebMenu(self.menu, action)
 
         if add_to_toolbar:
             self.toolbar.addAction(action)
@@ -158,14 +153,14 @@ class QgisStac:
         icon_path = ":/plugins/qgis_stac/icon.png"
         self.add_action(
             icon_path,
-            text=self.tr(u"Open STAC API Browser"),
+            text=self.tr("Open STAC API Browser X"),
             callback=self.run,
             parent=self.iface.mainWindow(),
         )
 
         self.add_action(
             None,
-            text=self.tr(u"Documentation"),
+            text=self.tr("Documentation"),
             callback=open_documentation,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
@@ -178,8 +173,10 @@ class QgisStac:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(self.tr(u"&STAC API Browser Plugin"), action)
-            self.iface.removePluginWebMenu(self.tr(u"&STAC API Browser Plugin"), action)
+            self.iface.removePluginMenu(self.tr("&STAC API Browser X Plugin"), action)
+            self.iface.removePluginWebMenu(
+                self.tr("&STAC API Browser X Plugin"), action
+            )
             self.iface.removeToolBarIcon(action)
 
     def run(self):
