@@ -10,14 +10,12 @@ from multiprocessing import Process
 from mock.mock_http_server import MockSTACApiServer
 from qgis.PyQt.QtTest import QSignalSpy
 
-from qgis_stac.api.client import Client
-from qgis_stac.api.models import ItemSearch, SortField, SortOrder
+from qgis_stac_plugin_x.api.client import Client
+from qgis_stac_plugin_x.api.models import ItemSearch, SortField, SortOrder
 
 
 class STACApiClientTest(unittest.TestCase):
-
     def setUp(self):
-
         self.app_server = MockSTACApiServer()
 
         self.server = Process(target=self.app_server.run)
@@ -31,7 +29,7 @@ class STACApiClientTest(unittest.TestCase):
         # check items searching
         spy = QSignalSpy(self.api_client.items_received)
         self.api_client.items_received.connect(self.app_response)
-        self.api_client.get_items(ItemSearch(collections=['simple-collection']))
+        self.api_client.get_items(ItemSearch(collections=["simple-collection"]))
         result = spy.wait(timeout=1000)
 
         self.assertTrue(result)
@@ -51,9 +49,9 @@ class STACApiClientTest(unittest.TestCase):
 
         self.api_client.get_items(
             ItemSearch(
-                collections=['simple-collection'],
+                collections=["simple-collection"],
                 sortby=SortField.ID,
-                sort_order=SortOrder.ASCENDING
+                sort_order=SortOrder.ASCENDING,
             )
         )
         result = spy.wait(timeout=1000)
@@ -68,7 +66,6 @@ class STACApiClientTest(unittest.TestCase):
         self.assertEqual(items[1].id, "20201211_223832_CS2")
 
     def test_collections_search(self):
-
         api_client = Client(self.app_server.url)
         spy = QSignalSpy(api_client.collections_received)
         api_client.collections_received.connect(self.app_response)
@@ -98,10 +95,10 @@ class STACApiClientTest(unittest.TestCase):
         conformance_classes = self.response[0]
 
         self.assertEqual(len(conformance_classes), 16)
-        self.assertEqual(conformance_classes[0].name, 'core')
+        self.assertEqual(conformance_classes[0].name, "core")
         self.assertEqual(
             conformance_classes[0].uri,
-            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core"
+            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
         )
 
     def app_response(self, *response_args):
@@ -116,6 +113,5 @@ class STACApiClientTest(unittest.TestCase):
         self.server.join()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-
