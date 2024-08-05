@@ -9,14 +9,14 @@ CATALOGS = [
     {
         "id": "b3f888b7-f353-4a89-abfb-f5d753681427",
         "name": "US GHG Center STAC",
-        "url": "https://ghg.center/api/stac/",
-        "selected": False,
+        "url": "https://earth.gov/ghgcenter/api/stac/",
+        "selected": True,
         "capability": None,
     },
     {
         "id": "74c1ee19-b2d7-4872-818b-ccabde3b8e14",
         "name": "VEDA STAC",
-        "url": "https://staging-stac.delta-backend.com/",
+        "url": "https://openveda.cloud/api/stac",
         "selected": False,
         "capability": None,
     },
@@ -24,7 +24,7 @@ CATALOGS = [
         "id": "07e3e9dd-cbad-4cf6-8336-424b88abf8f3",
         "name": "Microsoft Planetary Computer STAC API",
         "url": "https://planetarycomputer.microsoft.com/api/stac/v1",
-        "selected": True,
+        "selected": False,
         "capability": ApiCapability.SUPPORT_SAS_TOKEN.value,
     },
     {
